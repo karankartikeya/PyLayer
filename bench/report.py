@@ -21,11 +21,26 @@ def category(task_id: str) -> str:
     return json.loads(meta.read_text()).get("category", "?") if meta.exists() else "?"
 
 
+def task_set(task_id: str) -> str:
+    meta = BENCH / "tasks" / task_id / "meta.json"
+    return json.loads(meta.read_text()).get("set", "v1") if meta.exists() else "?"
+
+
 def main() -> None:
     rows = [json.loads(line) for line in RESULTS.read_text().splitlines()] if RESULTS.exists() else []
     if not rows:
         print("No results yet.")
         return
+    groups: dict[tuple[str, str], list[dict]] = defaultdict(list)
+    for r in rows:
+        groups[(r.get("model_arg", "default"), task_set(r["task_id"]))].append(r)
+    for (model, tset), rs in sorted(groups.items()):
+        print(f"# model={model} set={tset}\n")
+        section(rs)
+        print()
+
+
+def section(rows: list[dict]) -> None:
     arms = sorted({r["arm"] for r in rows})
 
     print("## Pass rate by arm\n")
