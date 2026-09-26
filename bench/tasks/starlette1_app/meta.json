@@ -1,0 +1,1 @@
+{"set": "hard", "category": "starlette", "trap": "Starlette 1.0 (2026) removed on_startup/on_shutdown, on_event, add_event_handler, and the @app.route/@app.exception_handler decorators", "expected_failure": "TypeError / AttributeError at import"}

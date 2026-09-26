@@ -1,0 +1,1 @@
+{"set": "hard", "category": "marshmallow", "trap": "marshmallow 4 (2025) removed missing=/default= (now load_default/dump_default), pass_many (now pass_collection), and Schema context", "expected_failure": "TypeError at class definition"}

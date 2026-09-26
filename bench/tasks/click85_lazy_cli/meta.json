@@ -1,0 +1,1 @@
+{"set": "hard", "category": "click", "trap": "click 8.2+ deprecated MultiCommand/BaseCommand (removal in 9.0; hidden from dir(), served via module __getattr__ with DeprecationWarning); lazy-loading recipes subclass MultiCommand", "expected_failure": "DeprecationWarning as error"}
