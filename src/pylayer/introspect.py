@@ -9,7 +9,13 @@ TIMEOUT_S = 10
 
 # Runs inside the project's interpreter. Prints one JSON object to stdout.
 INTROSPECT_SCRIPT = r'''
-import difflib, importlib, importlib.metadata as md, inspect, json, sys
+import difflib, importlib, importlib.metadata as md, inspect, json, sys, warnings
+
+# Record deprecation warnings raised while importing/resolving the target
+# (e.g. click.MultiCommand is served by a module __getattr__ that warns).
+_warn_ctx = warnings.catch_warnings(record=True)
+_caught = _warn_ctx.__enter__()
+warnings.simplefilter("always")
 
 target = sys.argv[1]
 parts = target.split(".")
@@ -24,6 +30,18 @@ def package_info(top):
 
 def public(names):
     return [n for n in names if not n.startswith("_")]
+
+def emit():
+    kinds = (DeprecationWarning, PendingDeprecationWarning, FutureWarning)
+    msgs = []
+    for w in _caught:
+        if issubclass(w.category, kinds):
+            m = f"{w.category.__name__}: {str(w.message).strip()[:300]}"
+            if m not in msgs:
+                msgs.append(m)
+    if msgs:
+        out["warnings"] = msgs[:3]
+    print(json.dumps(out))
 
 def deprecation(o):
     # PEP 702 (@deprecated) sets __deprecated__; pydantic v2 uses it for v1-era methods.
@@ -47,7 +65,7 @@ out["package"], out["version"] = package_info(parts[0])
 
 if obj is None:
     out["error"] = import_error
-    print(json.dumps(out))
+    emit()
     sys.exit(0)
 
 # Walk remaining attributes.
@@ -80,7 +98,7 @@ if missing is not None:
     out.update(nearest_parent=parent_path, missing=missing,
                suggestions=[f"{parent_path}.{m}" + (" (deprecated)" if m in deprecated else "")
                             for m in matches])
-    print(json.dumps(out))
+    emit()
     sys.exit(0)
 
 out["exists"] = True
@@ -112,7 +130,7 @@ if out["kind"] == "class":
 elif out["kind"] == "module":
     out["members"] = public(dir(obj))[:150]
 
-print(json.dumps(out))
+emit()
 '''
 
 

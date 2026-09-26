@@ -63,3 +63,11 @@ def test_env_fallback(tmp_path, monkeypatch):
     r = get_signature("json.dumps", str(tmp_path))
     assert r["exists"] is True
     assert r["kind"] == "function"
+
+
+def test_getattr_deprecation_warning_reported(pydantic_project):
+    # click 8.2+ hides MultiCommand from dir() and serves it via a warning module __getattr__.
+    r = get_signature("click.MultiCommand", str(pydantic_project))
+    assert r["exists"] is True
+    assert any("MultiCommand" in w and "deprecated" in w for w in r["warnings"])
+    assert "warnings" not in get_signature("click.Group", str(pydantic_project))
