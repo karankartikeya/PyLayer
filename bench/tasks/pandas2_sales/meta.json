@@ -1,0 +1,1 @@
+{"category": "pandas", "trap": "pandas 2.x: DataFrame.append removed; groupby().mean() no longer drops text columns (TypeError); resample('H') FutureWarning in 2.2", "expected_failure": "AttributeError / TypeError / FutureWarning as error"}
