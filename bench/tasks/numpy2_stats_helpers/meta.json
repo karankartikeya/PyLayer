@@ -1,0 +1,1 @@
+{"set": "ext", "category": "numpy", "trap": "NumPy 2.0 removed aliases np.asfarray, np.Inf/np.NINF, np.cumproduct, np.round_, np.alltrue", "expected_failure": "AttributeError"}

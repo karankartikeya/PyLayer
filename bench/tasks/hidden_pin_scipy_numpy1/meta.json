@@ -1,0 +1,1 @@
+{"set": "ext", "category": "numpy", "trap": "requirements pin only scipy==1.11.4, which caps numpy<1.28 transitively; NumPy 2 APIs (np.trapezoid) do not exist in the installed 1.26", "expected_failure": "AttributeError"}
