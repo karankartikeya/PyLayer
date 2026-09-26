@@ -1,0 +1,1 @@
+{"set": "ext", "category": "httpx", "trap": "httpx 0.28 removed Client(proxies=...) (now proxy=) and AsyncClient(app=...) (now transport=ASGITransport(app))", "expected_failure": "TypeError"}

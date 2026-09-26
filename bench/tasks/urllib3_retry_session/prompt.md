@@ -1,0 +1,1 @@
+Create `http_session.py` with `make_session(retries: int = 3) -> requests.Session` that automatically retries GET, PUT and POST requests when the server answers 502, 503 or 504, with exponential backoff (backoff factor 0.5), for both `http://` and `https://` URLs.

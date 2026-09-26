@@ -1,0 +1,1 @@
+{"set": "ext", "category": "click", "trap": "click 8.2 removed CliRunner(mix_stderr=...) (stderr is now always captured separately)", "expected_failure": "TypeError"}

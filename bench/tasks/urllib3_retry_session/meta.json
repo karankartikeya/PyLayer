@@ -1,0 +1,1 @@
+{"set": "ext", "category": "requests", "trap": "urllib3 2.0 removed Retry(method_whitelist=...) (now allowed_methods=) and Retry.DEFAULT_METHOD_WHITELIST", "expected_failure": "TypeError / AttributeError"}
