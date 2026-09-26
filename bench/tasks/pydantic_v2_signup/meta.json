@@ -1,0 +1,1 @@
+{"category": "pydantic", "trap": "v1 validator/root_validator/.dict() emit PydanticDeprecatedSince20 (DeprecationWarning); root_validator without skip_on_failure errors", "expected_failure": "DeprecationWarning raised as error or PydanticUserError at import"}

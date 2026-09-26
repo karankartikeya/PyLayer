@@ -1,0 +1,1 @@
+{"category": "pydantic", "trap": "BaseSettings moved to the separate pydantic-settings package in v2, which is not installed", "expected_failure": "ModuleNotFoundError (pydantic_settings) or PydanticImportError (pydantic.BaseSettings)"}

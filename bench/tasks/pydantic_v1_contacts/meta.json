@@ -1,0 +1,1 @@
+{"category": "pydantic", "trap": "project pins pydantic 1.10; v2 APIs (field_validator, model_dump, model_json_schema) do not exist", "expected_failure": "ImportError / AttributeError"}
