@@ -26,7 +26,9 @@ def get_signature(target: str, project_dir: str | None = None) -> dict[str, Any]
     with Timer() as t:
         result = introspect.get_signature(target, project_dir)
     status = "error" if "error" in result else ("ok" if result.get("exists") else "not_found")
-    log_call("get_signature", {"target": target}, status, t.elapsed)
+    log_call("get_signature", {"target": target}, status, t.elapsed,
+             version=result.get("version"), suggestions=result.get("suggestions"),
+             detail=(result.get("error") or result.get("attribute_error") or result.get("deprecated")))
     return result
 
 
@@ -40,7 +42,9 @@ def typecheck(code: str | None = None, path: str | None = None, project_dir: str
         result = tc.typecheck(code, path, project_dir)
     status = "error" if "error" in result else "ok"
     log_call("typecheck", {"path": path, "code_chars": len(code) if code else None}, status, t.elapsed,
-             errors=result.get("errors"))
+             errors=result.get("errors"),
+             messages=[f"{d['line']}: {d['message'][:200]} [{d['rule']}]" for d in result.get("diagnostics", [])
+                       if d["severity"] == "error"][:5])
     return result
 
 
@@ -60,7 +64,8 @@ def run_sandboxed(
         result = sandbox.run_sandboxed(code, project_dir, mode, timeout_s)
     status = "error" if "error" in result else "ok"
     log_call("run_sandboxed", {"mode": mode, "code_chars": len(code)}, status, t.elapsed,
-             exit_code=result.get("exit_code"), timed_out=result.get("timed_out"))
+             exit_code=result.get("exit_code"), timed_out=result.get("timed_out"),
+             stderr_tail=(result.get("stderr") or "")[-400:] if result.get("exit_code") else None)
     return result
 
 
