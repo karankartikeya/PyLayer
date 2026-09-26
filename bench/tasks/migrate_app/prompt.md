@@ -1,0 +1,1 @@
+We just upgraded this project to pydantic 2 and SQLAlchemy 2 (see requirements.txt) and the test suite in `tests/` now fails. Please update the code in `app/` so it works properly with the new versions. Keep the behaviour of the public functions the same as before the upgrade. CI treats DeprecationWarnings as errors.

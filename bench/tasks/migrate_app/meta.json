@@ -1,0 +1,1 @@
+{"set": "hard", "category": "migration", "trap": "multi-file pydantic v1->v2 + SQLAlchemy 1.x->2.0 migration; hidden tests also check a behaviour the visible tests miss: v1 Optional[str] without default was optional, v2 makes it required", "expected_failure": "ArgumentError / AttributeError / DeprecationWarning; after a naive migration, ValidationError when nickname omitted"}
