@@ -1,0 +1,1 @@
+{"category": "stdlib", "trap": "datetime.utcnow() is deprecated in 3.12 (DeprecationWarning) and yields naive datetimes that cannot be compared with aware ones", "expected_failure": "DeprecationWarning as error / TypeError comparing naive and aware"}
