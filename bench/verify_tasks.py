@@ -15,8 +15,8 @@ def check(task_id: str, kind: str) -> dict:
         return {"pass": None, "test_output": f"no {kind} dir"}
     ws = make_workspace(task_id, f"verify-{kind}", with_venv=False)
     try:
-        for f in src.iterdir():
-            shutil.copy(f, ws / f.name)
+        # An empty traps dir means "the seeded workspace as-is" (e.g. unmigrated code).
+        shutil.copytree(src, ws, dirs_exist_ok=True)
         return score(ws, task_id)
     finally:
         shutil.rmtree(ws, ignore_errors=True)

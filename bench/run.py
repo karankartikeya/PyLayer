@@ -50,9 +50,17 @@ def clean_env() -> dict[str, str]:
     return {k: v for k, v in os.environ.items() if not k.startswith("CLAUDE") and k != "VIRTUAL_ENV"}
 
 
+def private_site(task_id: str) -> Path | None:
+    """Optional dir of pure-Python packages not on PyPI (installed into venv and sandbox, never the workspace)."""
+    d = TASKS_DIR / task_id / "private_site"
+    return d if d.is_dir() else None
+
+
 def make_workspace(task_id: str, label: str, with_venv: bool = True) -> Path:
     task = TASKS_DIR / task_id
     ws = Path(tempfile.mkdtemp(prefix=f"pylayer-{label}-"))
+    if (task / "workspace").is_dir():
+        shutil.copytree(task / "workspace", ws, dirs_exist_ok=True)
     shutil.copy(task / "requirements.txt", ws / "requirements.txt")
     if with_venv:
         env = clean_env()
@@ -63,6 +71,9 @@ def make_workspace(task_id: str, label: str, with_venv: bool = True) -> Path:
                  "-r", str(ws / "requirements.txt")],
                 check=True, env=env,
             )
+        site = private_site(task_id)
+        if site:
+            shutil.copytree(site, ws / ".venv" / "lib" / "python3.12" / "site-packages", dirs_exist_ok=True)
     return ws
 
 
@@ -71,7 +82,16 @@ def score(ws: Path, task_id: str) -> dict:
     dest = ws / "hidden_tests"
     shutil.rmtree(dest, ignore_errors=True)
     shutil.copytree(TASKS_DIR / task_id / "hidden_tests", dest)
-    r = run_test_dir(str(ws), "hidden_tests", timeout_s=180)
+    site = private_site(task_id)
+    old = os.environ.pop("PYLAYER_EXTRA_SITE", None)
+    if site:
+        os.environ["PYLAYER_EXTRA_SITE"] = str(site)
+    try:
+        r = run_test_dir(str(ws), "hidden_tests", timeout_s=180)
+    finally:
+        os.environ.pop("PYLAYER_EXTRA_SITE", None)
+        if old is not None:
+            os.environ["PYLAYER_EXTRA_SITE"] = old
     return {
         "pass": r.get("exit_code") == 0,
         "test_exit_code": r.get("exit_code"),
@@ -107,7 +127,7 @@ def tool_counts(run_id: str) -> dict[str, int]:
     return counts
 
 
-def claude_cmd(prompt: str, arm: str, run_id: str, ws: Path, model: str | None) -> list[str]:
+def claude_cmd(prompt: str, arm: str, run_id: str, ws: Path, model: str | None, task_id: str) -> list[str]:
     cmd = ["claude", "-p", prompt, "--output-format", "json",
            "--setting-sources", "project", "--permission-mode", "dontAsk",
            "--no-session-persistence", "--strict-mcp-config"]
@@ -115,7 +135,8 @@ def claude_cmd(prompt: str, arm: str, run_id: str, ws: Path, model: str | None) 
     if arm == "B":
         mcp = {"mcpServers": {"pylayer": {
             "type": "stdio", "command": str(PYLAYER_BIN), "args": [],
-            "env": {"PYLAYER_RUN_ID": run_id, "PYLAYER_PROJECT_DIR": str(ws)},
+            "env": {"PYLAYER_RUN_ID": run_id, "PYLAYER_PROJECT_DIR": str(ws),
+                    "PYLAYER_EXTRA_SITE": str(private_site(task_id) or "")},
         }}}
         tools += PYLAYER_TOOLS
     else:
@@ -144,7 +165,7 @@ def run_one(task_id: str, arm: str, repeat: int, model: str | None, keep: bool) 
     error = None
     try:
         proc = subprocess.run(
-            claude_cmd(prompt, arm, run_id, ws, model),
+            claude_cmd(prompt, arm, run_id, ws, model, task_id),
             cwd=ws, env=env, stdin=subprocess.DEVNULL,
             capture_output=True, text=True, timeout=CLAUDE_TIMEOUT_S,
         )
