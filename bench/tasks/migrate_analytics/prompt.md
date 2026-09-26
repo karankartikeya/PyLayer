@@ -1,0 +1,1 @@
+We upgraded this project to NumPy 2 and pandas 2 (see requirements.txt) and the tests in `tests/` fail now. Please update the code in `analytics/` so it works properly with the new versions, keeping the behaviour of the public functions the same. CI treats DeprecationWarnings and FutureWarnings as errors.
