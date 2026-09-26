@@ -1,0 +1,1 @@
+{"category": "sqlalchemy", "trap": "project pins SQLAlchemy 1.4; 2.0-only APIs (DeclarativeBase, mapped_column) do not exist", "expected_failure": "ImportError"}

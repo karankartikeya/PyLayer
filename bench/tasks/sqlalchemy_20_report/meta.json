@@ -1,0 +1,1 @@
+{"category": "sqlalchemy", "trap": "SQLAlchemy 2.0 removed engine.execute(), plain-string execution, and mapping-style Row access (dict(row))", "expected_failure": "AttributeError / ObjectNotExecutableError / TypeError"}
