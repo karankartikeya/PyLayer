@@ -41,6 +41,10 @@ def list_tasks() -> list[str]:
     return sorted(p.name for p in TASKS_DIR.iterdir() if (p / "prompt.md").exists())
 
 
+def task_set(task_id: str) -> str:
+    return json.loads((TASKS_DIR / task_id / "meta.json").read_text()).get("set", "v1")
+
+
 def clean_env() -> dict[str, str]:
     """Drop Claude Code session vars so a nested `claude -p` doesn't inherit the parent session."""
     return {k: v for k, v in os.environ.items() if not k.startswith("CLAUDE") and k != "VIRTUAL_ENV"}
@@ -168,6 +172,7 @@ def run_one(task_id: str, arm: str, repeat: int, model: str | None, keep: bool) 
         "task_id": task_id,
         "arm": arm,
         "repeat": repeat,
+        "model_arg": model or "default",
         "run_id": run_id,
         "pass": result["pass"],
         "test_exit_code": result["test_exit_code"],
@@ -192,19 +197,20 @@ def run_one(task_id: str, arm: str, repeat: int, model: str | None, keep: bool) 
     return record
 
 
-def done_keys() -> set[tuple[str, str, int]]:
+def done_keys() -> set[tuple[str, str, int, str]]:
     if not RESULTS.exists():
         return set()
     keys = set()
     for line in RESULTS.read_text().splitlines():
         r = json.loads(line)
-        keys.add((r["task_id"], r["arm"], r["repeat"]))
+        keys.add((r["task_id"], r["arm"], r["repeat"], r.get("model_arg", "default")))
     return keys
 
 
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--tasks", help="comma-separated task ids (default: all)")
+    ap.add_argument("--set", help="only tasks whose meta.json has this `set` (e.g. v1, hard)")
     ap.add_argument("--arms", default="A,B")
     ap.add_argument("--limit", type=int, help="max number of runs to execute this invocation")
     ap.add_argument("--repeats", type=int, default=1)
@@ -215,13 +221,17 @@ def main() -> None:
     if not PYLAYER_BIN.exists():
         sys.exit(f"missing {PYLAYER_BIN}; run `uv sync` first")
     tasks = args.tasks.split(",") if args.tasks else list_tasks()
+    if args.set:
+        tasks = [t for t in tasks if task_set(t) == args.set]
     unknown = set(tasks) - set(list_tasks())
     if unknown:
         sys.exit(f"unknown tasks: {sorted(unknown)}")
     arms = args.arms.split(",")
 
     done = done_keys()
-    todo = [(t, a, r) for r in range(args.repeats) for t in tasks for a in arms if (t, a, r) not in done]
+    model_key = args.model or "default"
+    todo = [(t, a, r) for r in range(args.repeats) for t in tasks for a in arms
+            if (t, a, r, model_key) not in done]
     if args.limit is not None:
         todo = todo[: args.limit]
     print(f"{len(todo)} runs to do ({len(done)} already recorded)")
