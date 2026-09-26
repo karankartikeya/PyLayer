@@ -1,0 +1,1 @@
+{"set": "ext", "category": "pandas", "trap": "pandas 3.0 (2026) removed fillna(method=...), and the 'M', 'T', 'H' frequency aliases now raise (use 'ME', 'min', 'h')", "expected_failure": "TypeError / ValueError"}
