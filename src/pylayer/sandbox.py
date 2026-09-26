@@ -61,6 +61,29 @@ def run_sandboxed(
     timeout_s: int = 30,
 ) -> dict:
     proj = resolve_project_dir(project_dir)
+    if mode == "script":
+        files, cmd = {"main.py": code}, ["python", "/work/main.py"]
+    elif code.strip():
+        files = {"test_snippet.py": code}
+        cmd = ["pytest", "-q", "-p", "no:cacheprovider", "--rootdir", "/work", "/work/test_snippet.py"]
+    else:
+        files, cmd = {}, ["pytest", "-q", "-p", "no:cacheprovider", "/project"]
+    return _run(proj, cmd, files, timeout_s)
+
+
+def run_test_dir(project_dir: str, rel_path: str, timeout_s: int = 120) -> dict:
+    """Run pytest on one directory of the project, isolated from any pytest config/conftest the project has.
+
+    Used by the benchmark scorer, not exposed as an MCP tool.
+    """
+    proj = resolve_project_dir(project_dir)
+    ini = "[pytest]\n"
+    target = f"/project/{rel_path}"
+    cmd = ["pytest", "-q", "-p", "no:cacheprovider", "-c", "/work/pytest.ini", "--rootdir", target, target]
+    return _run(proj, cmd, {"pytest.ini": ini}, timeout_s)
+
+
+def _run(proj: Path, cmd: list[str], files: dict[str, str], timeout_s: int) -> dict:
     try:
         tag = ensure_image(proj)
     except (RuntimeError, subprocess.TimeoutExpired, FileNotFoundError) as e:
@@ -69,14 +92,8 @@ def run_sandboxed(
     name = f"pylayer-run-{uuid.uuid4().hex[:12]}"
     with tempfile.TemporaryDirectory(prefix="pylayer-") as work:
         work_dir = Path(work)
-        if mode == "script":
-            (work_dir / "main.py").write_text(code)
-            cmd = ["python", "/work/main.py"]
-        elif code.strip():
-            (work_dir / "test_snippet.py").write_text(code)
-            cmd = ["pytest", "-q", "-p", "no:cacheprovider", "--rootdir", "/work", "/work/test_snippet.py"]
-        else:
-            cmd = ["pytest", "-q", "-p", "no:cacheprovider", "/project"]
+        for fname, content in files.items():
+            (work_dir / fname).write_text(content)
 
         docker_cmd = [
             "docker", "run", "--rm", "--name", name,
