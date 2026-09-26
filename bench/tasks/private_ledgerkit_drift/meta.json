@@ -1,0 +1,1 @@
+{"set": "hard", "category": "private-package", "trap": "internal package is v3.0.0 but the repo docs describe v2.4 (Money.from_float, add_entry, move, get_balance, ledgerkit.errors.NotEnoughFunds) - none exist in 3.0", "expected_failure": "ImportError / AttributeError"}
