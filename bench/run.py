@@ -261,6 +261,10 @@ def main() -> None:
     for i, (task_id, arm, repeat) in enumerate(todo, 1):
         print(f"[{i}/{len(todo)}] {task_id} arm={arm} repeat={repeat} ...", flush=True)
         rec = run_one(task_id, arm, repeat, args.model, args.keep)
+        if rec["error"] or rec["is_error"]:
+            # Usually a usage cap or CLI failure, not a task failure: don't record it, stop so a rerun resumes here.
+            sys.exit(f"claude run failed, not recorded; stopping. error={rec['error']} subtype={rec['subtype']} "
+                     f"artifacts={rec['artifact_dir']}")
         with RESULTS.open("a") as f:
             f.write(json.dumps(rec) + "\n")
         tools = ", ".join(f"{k}={v}" for k, v in rec["tool_calls"].items()) or "-"
