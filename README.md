@@ -15,3 +15,14 @@ uv sync
 uv run pytest          # sandbox tests skip if Docker isn't running
 uv run pylayer         # start the stdio server
 ```
+
+## Benchmark
+
+```sh
+uv run python bench/verify_tasks.py              # reference solutions pass, traps fail
+uv run python bench/run.py --tasks a,b --arms A,B  # resumable; appends to bench/results/results.jsonl
+uv run python bench/report.py                    # markdown summary
+```
+
+Arm A: Claude Code with file tools and `python` only. Arm B: same plus the PyLayer MCP server and `bench/workspace_CLAUDE.md`.
+Runs use `--setting-sources project` and `--strict-mcp-config` so user-level hooks, plugins and MCP servers don't leak in.
