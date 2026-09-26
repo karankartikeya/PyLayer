@@ -1,0 +1,1 @@
+{"set": "ext", "category": "private-package", "trap": "undocumented internal package: the API (GeoPoint, haversine_km, Route.length_km property, Route.bbox() -> (sw, ne)) must be discovered; guessed names (Point, distance, route.length()) fail", "expected_failure": "ImportError / AttributeError / TypeError"}
