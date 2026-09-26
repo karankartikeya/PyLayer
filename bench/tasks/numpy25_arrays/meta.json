@@ -1,0 +1,1 @@
+{"set": "hard", "category": "numpy", "trap": "NumPy 2.5 (2026) removed np.trapz, np.in1d, np.row_stack (deprecated in 2.0); ndarray.ptp removed in 2.0", "expected_failure": "AttributeError"}

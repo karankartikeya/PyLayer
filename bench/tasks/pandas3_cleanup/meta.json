@@ -1,0 +1,1 @@
+{"set": "hard", "category": "pandas", "trap": "pandas 3.0 (2026): default str dtype (dtype == object is False, select_dtypes('object') warns), applymap and DataFrame.first removed, chained assignment never works under copy-on-write", "expected_failure": "wrong result / AttributeError / Pandas4Warning as error"}
