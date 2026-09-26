@@ -1,0 +1,1 @@
+{"set": "ext", "category": "stdlib", "trap": "datetime.utcfromtimestamp()/utcnow() are deprecated in 3.12 (DeprecationWarning)", "expected_failure": "DeprecationWarning as error"}

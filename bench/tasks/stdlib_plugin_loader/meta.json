@@ -1,0 +1,1 @@
+{"set": "ext", "category": "stdlib", "trap": "imp (load_source/reload) was removed in Python 3.12; also importlib.reload() cannot find specs for modules loaded from arbitrary paths", "expected_failure": "ModuleNotFoundError"}
