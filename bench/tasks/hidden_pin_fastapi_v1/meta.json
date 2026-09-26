@@ -1,0 +1,1 @@
+{"set": "hard", "category": "pydantic", "trap": "requirements pin only fastapi==0.99.1, which pulls pydantic 1.x transitively; pydantic v2 APIs (field_validator, model_dump, ConfigDict) fail", "expected_failure": "ImportError"}
