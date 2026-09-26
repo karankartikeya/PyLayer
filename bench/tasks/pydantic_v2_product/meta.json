@@ -1,0 +1,1 @@
+{"set": "ext", "category": "pydantic", "trap": "pydantic v2 removed Field(regex=) (now pattern=), deprecated min_items/max_items and json_encoders / class Config", "expected_failure": "PydanticUserError / DeprecationWarning as error"}
