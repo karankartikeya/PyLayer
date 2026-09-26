@@ -1,0 +1,1 @@
+{"category": "numpy", "trap": "project pins NumPy 1.26; np.trapezoid (2.0+) does not exist", "expected_failure": "AttributeError"}
