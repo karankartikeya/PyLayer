@@ -1,6 +1,8 @@
 """run_sandboxed: execute code in a network-less Docker container."""
 
 import hashlib
+import os
+import shutil
 import subprocess
 import tempfile
 import time
@@ -28,22 +30,50 @@ def _tail(text: str) -> str:
     return f"...[truncated {len(text) - MAX_OUTPUT} chars]\n" + text[-MAX_OUTPUT:]
 
 
-def image_tag(requirements: str) -> str:
-    digest = hashlib.sha256((DOCKERFILE + requirements).encode()).hexdigest()[:16]
+EXTRA_SITE_DOCKERFILE = "COPY extra_site/ /usr/local/lib/python3.12/site-packages/\n"
+
+
+def _extra_site_dirs() -> list[Path]:
+    """Pure-Python packages that aren't on PyPI (e.g. private/internal ones), from PYLAYER_EXTRA_SITE.
+
+    Each dir's contents (package dirs + .dist-info) are copied into the image's site-packages.
+    """
+    raw = os.environ.get("PYLAYER_EXTRA_SITE", "")
+    return [Path(p) for p in raw.split(os.pathsep) if p]
+
+
+def _dir_digest(dirs: list[Path]) -> str:
+    h = hashlib.sha256()
+    for d in dirs:
+        for f in sorted(p for p in d.rglob("*") if p.is_file() and "__pycache__" not in p.parts):
+            h.update(str(f.relative_to(d)).encode())
+            h.update(f.read_bytes())
+    return h.hexdigest()
+
+
+def image_tag(requirements: str, extra: str = "") -> str:
+    digest = hashlib.sha256((DOCKERFILE + requirements + extra).encode()).hexdigest()[:16]
     return f"pylayer-env:{digest}"
 
 
 def ensure_image(project_dir: Path) -> str:
     req_file = project_dir / "requirements.txt"
     requirements = req_file.read_text() if req_file.exists() else ""
-    tag = image_tag(requirements)
+    extra_dirs = _extra_site_dirs()
+    tag = image_tag(requirements, _dir_digest(extra_dirs) if extra_dirs else "")
 
     exists = subprocess.run(["docker", "image", "inspect", tag], capture_output=True)
     if exists.returncode == 0:
         return tag
 
     with tempfile.TemporaryDirectory() as ctx:
-        (Path(ctx) / "Dockerfile").write_text(DOCKERFILE)
+        dockerfile = DOCKERFILE
+        if extra_dirs:
+            for d in extra_dirs:
+                shutil.copytree(d, Path(ctx) / "extra_site", dirs_exist_ok=True,
+                                ignore=shutil.ignore_patterns("__pycache__"))
+            dockerfile += EXTRA_SITE_DOCKERFILE
+        (Path(ctx) / "Dockerfile").write_text(dockerfile)
         (Path(ctx) / "requirements.txt").write_text(requirements)
         proc = subprocess.run(
             ["docker", "build", "-q", "-t", tag, ctx],
