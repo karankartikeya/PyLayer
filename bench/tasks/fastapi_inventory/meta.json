@@ -1,0 +1,1 @@
+{"category": "fastapi", "trap": "@app.on_event('startup'/'shutdown') is deprecated in favor of lifespan (DeprecationWarning)", "expected_failure": "DeprecationWarning as error at import"}
